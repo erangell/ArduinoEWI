@@ -1,5 +1,6 @@
 //A2NSMID1: MIDI IN CAPTURE, FILTER, TRANSFORM, OUTPUT
 
+//2026-06-25: configuration for Bb clarinet EWI to MIDI OUT
 //2026-04-22: send patch change to clarinet at startup
 //2026-04-16: switches for channels 11-16 now used for transposition, read at startup time only
 // channel 16 = sign bit: 1 = negative, 0=positive
@@ -23,23 +24,26 @@ bool filterPgm=0;         //filter program change messages
 bool filterPressure=0;    //filter channel pressure messages
 bool filterBend=0;        //filter pitch bend messages
 
-bool filterChannel[] = {0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0}; //filter channel 10 (drums)
+//2026-06-25 - removed drum filter
+bool filterChannel[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; //filter channel 10 (drums)
 //========================================^ DRUMS
 
 //Enhancement: Set channel filters dynamically using dip switches when no serial data being received.  Smartly debounce the switches.
 
-int delaybetweenbytes = 1000; //slow down for Apple
+//2026-06-25 - removed delay
+int delaybetweenbytes = 1; //slow down for Apple
 int transformAftertouch = 0;       //transformation for wind controller - 0 is no transform
 
 //the following 2 values are now being read from dip switches on startup - 
 //int transformChannelPressure = 11;  //transformation for wind controller - value is controller number to use (ex: 7=volume 11=expression
 //int transformBreathController = 7 ; //convert MIDI control change 2 messages to volume 7
-
-int transformBreathValue = 0;
-int transformPressureValue = 0;
+//2026-06-25 - hardcoding transforms
+int transformBreathValue = 11;
+int transformPressureValue = 7;
 
 bool breathControllerFound = false;
-int transposevalue = 0;
+//2026-06-25 - hardcoding
+int transposevalue = -2;
 
 byte inbyte;  //current midi in byte
 int state = 0;  //state machine
@@ -82,7 +86,7 @@ void setup() {
     lcd.setCursor(0,0);
     lcd.print("Apple ][ No Slot");
     lcd.setCursor(0,1);
-    lcd.print("*M I D I*  v0.02");
+    lcd.print("*M I D I*  v0.03");
     
     Serial1.begin(31250);
     Serial2.begin(31250);
@@ -96,8 +100,6 @@ void setup() {
     lcd.clear();
     lcd.setCursor(0,0);
     lcd.print("0123456789ABCDEF");
-        
-    digitalWrite(LED_BUILTIN,LOW);
 
     //Read DIP switches
     pinMode(23,INPUT);
@@ -150,20 +152,24 @@ void setup() {
     int clarinet = 71;
     do1ByteMsg(0xC0, clarinet);
 
-    transformBreathValue = filterChannel[0]*16 + filterChannel[1]*8 + filterChannel[2]*4 + filterChannel[3]*2 + filterChannel[4];
-    transformPressureValue = filterChannel[5]*16 + filterChannel[6]*8 + filterChannel[7]*4 + filterChannel[8]*2 + filterChannel[9];
-
-    transposevalue = filterChannel[10]*16 + filterChannel[11]*8 + filterChannel[12]*4 + filterChannel[13]*2 + filterChannel[14];
-    if (filterChannel[15] == 1)
-    {
-      transposevalue = transposevalue * -1;
-    }
+    //2026-06-25 - no dip switches connected
+    //transformBreathValue = filterChannel[0]*16 + filterChannel[1]*8 + filterChannel[2]*4 + filterChannel[3]*2 + filterChannel[4];
+    //transformPressureValue = filterChannel[5]*16 + filterChannel[6]*8 + filterChannel[7]*4 + filterChannel[8]*2 + filterChannel[9];
+    //transposevalue = filterChannel[10]*16 + filterChannel[11]*8 + filterChannel[12]*4 + filterChannel[13]*2 + filterChannel[14];
+    //if (filterChannel[15] == 1)
+    //{
+    //  transposevalue = transposevalue * -1;
+    //}
+    
     lcd.setCursor(10,0);
     lcd.print(" TR    ");
     lcd.setCursor(13,0);
     lcd.print(transposevalue);
     
     Serial.println("OK to play now");
+    
+    //2026-06-25: moved to bottom of setup
+    digitalWrite(LED_BUILTIN,LOW);
 }
 
 void loop() 
